@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌐 Simulador TCP vs UDP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .network-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .topology {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .device {
+            text-align: center;
+            position: relative;
+        }
+
+        .device-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .device-icon:hover {
+            transform: translateY(-5px);
+        }
+
+        .pc { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+        .switch { background: linear-gradient(45deg, #43e97b, #38f9d7); }
+        .server { background: linear-gradient(45deg, #fa709a, #fee140); }
+
+        .device-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .connection {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            top: 50%;
+            border-radius: 2px;
+            animation: pulse 2s infinite;
+        }
+
+        .connection1 {
+            left: 15%;
+            width: 25%;
+        }
+
+        .connection2 {
+            left: 60%;
+            width: 25%;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .protocol-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .protocol-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .tcp-section {
+            border-color: #e74c3c;
+        }
+
+        .udp-section {
+            border-color: #3498db;
+        }
+
+        .protocol-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tcp-title { color: #e74c3c; }
+        .udp-title { color: #3498db; }
+
+        .test-button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+        }
+
+        .tcp-button {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .udp-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .test-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .packet-visualization {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .packet {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            animation: slideIn 0.5s ease;
+        }
+
+        .tcp-packet {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .udp-packet {
+            background: #3498db;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .questions {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .question {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ffeaa7;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .topology {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .connection {
+                display: none;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 Simulador TCP vs UDP</h1>
+            <p>Aprenda as diferenças entre TCP e UDP de forma interativa!</p>
+        </div>
+
+        <div class="network-container">
+            <h2>🔧 Topologia da Rede</h2>
+            
+            <div class="topology">
+                <div class="device">
+                    <div class="device-icon pc">💻</div>
+                    <h3>PC0</h3>
+                    <div class="device-info">
+                        <strong>IP:</strong> 192.168.1.10<br>
+                        <strong>Máscara:</strong> 255.255.255.0<br>
+                        <strong>Gateway:</strong> 192.168.1.1
+                    </div>
+                </div>
+
+                <div class="connection connection1"></div>
+
+                <div class="device">
+                    <div class="device-icon switch">🔀</div>
+                    <h3>Switch0</h3>
+                    <div class="device-info">
+                        Conecta PC e Servidor<br>
+                        <strong>Cabos:</strong> Cobre direto (azul)
+                    </div>
+                </div>
+
+                <div class="connection connection2"></div>
+
+                <div class="device">
+                    <div class="device-icon server">🖥️</div>
+                    <h3>Server0</h3>
+                    <div class="device-info">
+                        <strong>IP:</strong> 192.168.1.100<br>
+                        <strong>Serviços:</strong> HTTP + DNS<br>
+                        <strong>Domínio:</strong> www.teste.com
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <strong>💡 Dica:</strong> O servidor está configurado com HTTP (porta 80, TCP) e DNS (porta 53, UDP)
+            </div>
+        </div>
+
+        <div class="network-container">
+            <h2>🧪 Testes de Protocolo</h2>
+            
+            <div class="controls">
+                <div class="protocol-section tcp-section">
+                    <div class="protocol-title tcp-title">
+                        🔴 TCP (HTTP)
+                    </div>
+                    <p><strong>Confiável:</strong> Garante entrega dos dados</p>
+                    <p><strong>Processo:</strong> Three-way handshake (SYN → SYN+ACK → ACK)</p>
+                    <button class="test-button tcp-button" onclick="testHTTP()">
+                        🌐 Acessar www.teste.com
+                    </button>
+                </div>
+
+                <div class="protocol-section udp-section">
+                    <div class="protocol-title udp-title">
+                        🔵 UDP (DNS)
+                    </div>
+                    <p><strong>Rápido:</strong> Sem confirmação de entrega</p>
+                    <p><strong>Processo:</strong> Pergunta → Resposta direta</p>
+                    <button class="test-button udp-button" onclick="testDNS()">
+                        🔍 nslookup www.teste.com
+                    </button>
+                </div>
+            </div>
+
+            <div class="packet-visualization" id="packetDisplay">
+                <h3>📡 Captura de Pacotes</h3>
+                <p>Clique nos botões acima para ver os pacotes em ação!</p>
+            </div>
+
+            <div id="status"></div>
+        </div>
+
+        <div class="questions">
+            <h2>🤔 Comparação TCP vs UDP</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Característica</th>
+                        <th>TCP</th>
+                        <th>UDP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Confiabilidade</strong></td>
+                        <td>✅ Garante entrega</td>
+                        <td>❌ Não garante</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Velocidade</strong></td>
+                        <td>🐌 Mais lento</td>
+                        <td>🚀 Mais rápido</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Conexão</strong></td>
+                        <td>📞 Precisa estabelecer</td>
+                        <td>📡 Sem conexão</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Uso típico</strong></td>
+                        <td>HTTP, Email, FTP</td>
+                        <td>DNS, Streaming, Jogos</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="question">
+                <h3>❓ Perguntas para Reflexão:</h3>
+                <ol>
+                    <li><strong>Qual protocolo garante entrega?</strong> TCP, porque usa confirmações (ACK)</li>
+                    <li><strong>Por que DNS usa UDP?</strong> É mais rápido para consultas simples</li>
+                    <li><strong>Quando usar cada um?</strong> TCP para dados importantes, UDP para velocidade</li>
+                    <li><strong>O que é o three-way handshake?</strong> SYN → SYN+ACK → ACK (aperto de mão triplo)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testCount = 0;
+
+        function clearPackets() {
+            const display = document.getElementById('packetDisplay');
+            display.innerHTML = '<h3>📡 Captura de Pacotes</h3>';
+        }
+
+        function addPacket(text, type, delay = 0) {
+            setTimeout(() => {
+                const display = document.getElementById('packetDisplay');
+                const packet = document.createElement('span');
+                packet.className = `packet ${type}-packet`;
+                packet.textContent = text;
+                display.appendChild(packet);
+            }, delay);
+        }
+
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            
+            setTimeout(() => {
+                status.style.opacity = '0';
+                setTimeout(() => {
+                    status.textContent = '';
+                    status.style.opacity = '1';
+                }, 300);
+            }, 3000);
+        }
+
+        function testHTTP() {
+            testCount++;
+            clearPackets();
+            
+            const button = event.target;
+            button.disabled = true;
+            
+            showStatus('🌐 Estabelecendo conexão HTTP (TCP)...', 'info');
+            
+            // Simulação do Three-way handshake
+            addPacket('PC → Server: SYN (Quer conectar?)', 'tcp', 100);
+            addPacket('Server → PC: SYN+ACK (Ok, conectando!)', 'tcp', 800);
+            addPacket('PC → Server: ACK (Conexão estabelecida!)', 'tcp', 1500);
+            
+            // Requisição HTTP
+            addPacket('PC → Server: GET /index.html HTTP/1.1', 'tcp', 2200);
+            addPacket('Server → PC: HTTP/1.1 200 OK + Página', 'tcp', 2900);
+            addPacket('PC → Server: ACK (Página recebida!)', 'tcp', 3600);
+            
+            // Fechamento da conexão
+            addPacket('PC → Server: FIN (Vou desconectar)', 'tcp', 4300);
+            addPacket('Server → PC: ACK+FIN (Ok, desconectando)', 'tcp', 5000);
+            addPacket('PC → Server: ACK (Desconectado!)', 'tcp', 5700);
+            
+            setTimeout(() => {
+                showStatus('✅ Página www.teste.com carregada com sucesso! Conexão TCP fechada.', 'success');
+                button.disabled = false;
+            }, 6000);
+        }
+
+        function testDNS() {
+            testCount++;
+            clearPackets();
+            
+            const button = event.target;
+            button.disabled = true;
+            
+            showStatus('🔍 Fazendo consulta DNS (UDP)...', 'info');
+            
+            // Consulta DNS simples
+            addPacket('PC → Server: DNS Query: www.teste.com?', 'udp', 100);
+            addPacket('Server → PC: DNS Response: 192.168.1.100', 'udp', 800);
+            
+            setTimeout(() => {
+                showStatus('✅ DNS resolvido! www.teste.com = 192.168.1.100', 'success');
+                button.disabled = false;
+            }, 1200);
+        }
+
+        // Animação inicial
+        window.onload = function() {
+            showStatus('🚀 Simulador carregado! Teste os protocolos TCP e UDP.', 'success');
+        };
+    </script>
+</body>
+</html>
